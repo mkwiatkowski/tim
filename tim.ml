@@ -18,8 +18,7 @@ let string_of_time_span span =
   let open Time.Span in
   let hours = int_of_float (to_hr span) in
   let minutes = (int_of_float (to_min span)) mod 60 in
-  let seconds = (int_of_float (to_sec span)) mod 60 in
-  sprintf "%dh %2dmin %2dsec" hours minutes seconds
+  sprintf "%dh %2dmin" hours minutes
 
 let string_of_record_duration record =
   let format t = Time.format t "%H:%M:%S" ~zone:Time.Zone.local in
