@@ -34,34 +34,10 @@ let read_tim_file file_name =
   let json = Yojson.Basic.from_file file_name in
   List.map (to_list json) ~f:read_tim_record
 
-let today =
-  Date.today ~zone:Time.Zone.local
-
-let to_date time =
-  Time.to_date time ~zone:Time.Zone.local
-
-let is_today time =
-  to_date time = today
-
-let same_year d1 d2 =
-  Date.year d1 = Date.year d2
-
-let is_this_week time =
-  let d = to_date time in
-  (same_year d today) && (Date.week_number d = Date.week_number today)
-
-let is_this_month time =
-  let d = to_date time in
-  (same_year d today) && (Date.month d = Date.month today)
-
-let is_last_month time =
-  let d = to_date time in
-  (same_year d today) && (Date.month d = Date.month (Date.add_months today (-1)))
-
-let filter_by_start_date records predicate =
-  List.filter records ~f:(fun r -> predicate r.start)
-
 let summary records =
+  let open Datetime in
+  let filter_by_start_date records predicate =
+    List.filter records ~f:(fun r -> predicate r.start) in
   let string_total predicate =
     string_of_duration (total_duration (filter_by_start_date records predicate)) in
   let today_timespans =

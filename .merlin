@@ -1,1 +1,3 @@
 PKG core yojson
+S .
+B _build
