@@ -36,19 +36,30 @@ let read_tim_file file_name =
 
 let summary records =
   let open Datetime in
+  let join_with_nl strings =
+    String.concat (List.map strings ~f:(fun s -> s ^ "\n")) in
   let filter_by_start_date records predicate =
     List.filter records ~f:(fun r -> predicate r.start) in
+  let span_total predicate =
+    total_duration (filter_by_start_date records predicate) in
   let string_total predicate =
-    string_of_duration (total_duration (filter_by_start_date records predicate)) in
+    string_of_duration (span_total predicate) in
   let today_timespans =
     let records = filter_by_start_date records is_today in
-    let strings = List.map records ~f:string_of_record_timespan in
-    String.concat ~sep:"\n" strings in
+    join_with_nl (List.map records ~f:string_of_record_timespan) in
+  let this_month_timespans =
+    let total_of_day day =
+      span_total (fun t -> day = (to_date t)) in
+    let total_not_zero day =
+      (total_of_day day) <> Time.Span.zero in
+    let string_of_day day =
+      sprintf "%s: %s" (Date.to_string day) (string_of_duration (total_of_day day)) in
+    join_with_nl (List.map (List.filter ~f:total_not_zero this_month_days) ~f:string_of_day) in
   let today_total = string_total is_today in
   let this_week_total = string_total is_this_week in
   let this_month_total = string_total is_this_month in
   let last_month_total = string_total is_last_month in
-  sprintf "Today:\n%s\n\nTotal: %s\nThis week: %s. This month: %s. Last month: %s.\n" today_timespans today_total this_week_total this_month_total last_month_total
+  sprintf "Today:\n%s\nTotal: %s. This week: %s.\n\nThis month:\n%s\nTotal: %s. Last month: %s.\n" today_timespans today_total this_week_total this_month_timespans this_month_total last_month_total
 
 let () =
   let records = read_tim_file "sample.json" in
