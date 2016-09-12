@@ -34,6 +34,8 @@ let read_tim_file file_name =
   let json = Yojson.Basic.from_file file_name in
   List.map (to_list json) ~f:read_tim_record
 
+let daily_hours_goal = 6
+
 let summary records =
   let open Datetime in
   let join_with_nl strings =
@@ -59,7 +61,15 @@ let summary records =
   let this_week_total = string_total is_this_week in
   let this_month_total = string_total is_this_month in
   let last_month_total = string_total is_last_month in
-  sprintf "Today:\n%s\nTotal: %s. This week: %s.\n\nThis month:\n%s\nTotal: %s. Last month: %s.\n" today_timespans today_total this_week_total this_month_timespans this_month_total last_month_total
+  let this_month_goal = Datetime.this_month_work_days_number * daily_hours_goal in
+  sprintf "Today:\n%s\nTotal: %s. This week: %s.\n\nThis month:\n%s\nTotal: %s (%d%% goal). Last month: %s.\n"
+          today_timespans
+          today_total
+          this_week_total
+          this_month_timespans
+          this_month_total
+          (int_of_float ((Time.Span.to_hr (span_total is_this_month)) *. 100.0 /. (float this_month_goal)))
+          last_month_total
 
 let () =
   let records = read_tim_file "sample.json" in
