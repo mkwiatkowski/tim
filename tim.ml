@@ -38,41 +38,43 @@ let daily_hours_goal = 6
 
 let summary records =
   let open Datetime in
-  let join_with_nl strings =
-    String.concat (List.map strings ~f:(fun s -> s ^ "\n")) in
   let filter_by_start_date records predicate =
     List.filter records ~f:(fun r -> predicate r.start) in
-  let span_total predicate =
-    total_duration (filter_by_start_date records predicate) in
-  let string_total predicate =
-    string_of_duration (span_total predicate) in
+  let today_records = filter_by_start_date records is_today in
+  let this_week_records = filter_by_start_date records is_this_week in
+  let this_month_records = filter_by_start_date records is_this_month in
+  let last_month_records = filter_by_start_date records is_last_month in
+  let join_with_nl strings =
+    String.concat (List.map strings ~f:(fun s -> s ^ "\n")) in
+  let string_total records =
+    string_of_duration (total_duration records) in
   let today_timespans =
     let records = filter_by_start_date records is_today in
     join_with_nl (List.map records ~f:string_of_record_timespan) in
   let this_month_timespans =
     let total_of_day day =
-      span_total (fun t -> day = (to_date t)) in
+      total_duration (filter_by_start_date this_month_records (fun t -> day = (to_date t))) in
     let total_not_zero day =
       (total_of_day day) <> Time.Span.zero in
     let string_of_day day =
       sprintf "%s: %s" (Date.to_string day) (string_of_duration (total_of_day day)) in
     join_with_nl (List.map (List.filter ~f:total_not_zero this_month_days) ~f:string_of_day) in
-  let today_total = string_total is_today in
-  let this_week_total = string_total is_this_week in
-  let this_month_total = string_total is_this_month in
-  let last_month_total = string_total is_last_month in
-  let percentage predicate goal =
-    int_of_float ((Time.Span.to_hr (span_total predicate)) *. 100.0 /. (float goal)) in
+  let today_total = string_total today_records in
+  let this_week_total = string_total this_week_records in
+  let this_month_total = string_total this_month_records in
+  let last_month_total = string_total last_month_records in
+  let percentage records goal =
+    int_of_float ((Time.Span.to_hr (total_duration records)) *. 100.0 /. (float goal)) in
   let this_month_goal = Datetime.this_month_work_days_number * daily_hours_goal in
   let this_week_goal = 5 * daily_hours_goal in
   sprintf "Today:\n%s\nTotal: %s. This week: %s (%d%% goal).\n\nThis month:\n%s\nTotal: %s (%d%% goal). Last month: %s.\n"
           today_timespans
           today_total
           this_week_total
-          (percentage is_this_week this_week_goal)
+          (percentage this_week_records this_week_goal)
           this_month_timespans
           this_month_total
-          (percentage is_this_month this_month_goal)
+          (percentage this_month_records this_month_goal)
           last_month_total
 
 let () =
