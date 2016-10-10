@@ -33,6 +33,9 @@ let string_total records =
 let percentage records goal =
   int_of_float ((total_duration records |> Time.Span.to_hr) *. 100.0 /. (float goal))
 
+let in_color color string =
+  (ANSITerminal.sprintf [color] "%s" string)
+
 let summary records =
   let open TimDate in
   let today_records = filter_by_start_date records is_today in
@@ -48,7 +51,7 @@ let summary records =
     let total_not_zero day =
       (total_of_day day) <> Time.Span.zero in
     let string_of_day day =
-      sprintf "%s: %s" (Date.to_string day) (total_of_day day |> string_of_duration) in
+      sprintf "%s: %s" (in_color ANSITerminal.cyan (Date.to_string day)) (total_of_day day |> string_of_duration) in
     join_with_nl (List.map (List.filter ~f:total_not_zero this_month_days) ~f:string_of_day) in
   let today_total = string_total today_records in
   let this_week_total = string_total this_week_records in
@@ -59,14 +62,20 @@ let summary records =
   let this_month_expected_so_far = float_of_int (TimDate.this_month_work_days_so_far * TimConfig.daily_hours_goal) |> of_hr in
   let this_month_goal_difference = (total_duration this_month_records) - this_month_expected_so_far in
   let this_week_goal = 5 * TimConfig.daily_hours_goal in
-  sprintf "Today:\n%s\nTotal: %s. This week: %s (%d%% goal).\n\nThis month:\n%s\nTotal: %s (%d%% goal, %s %s). Last month: %s.\n"
+  sprintf "%s\n%s\n%s %s. %s %s (%d%% goal).\n\n%s\n%s\n%s %s (%d%% goal, %s %s). %s %s.\n"
+          (in_color ANSITerminal.green "Today:")
           today_timespans
+          (in_color ANSITerminal.green "Total:")
           today_total
+          (in_color ANSITerminal.green "This week:")
           this_week_total
           (percentage this_week_records this_week_goal)
+          (in_color ANSITerminal.green "This month:")
           this_month_timespans
+          (in_color ANSITerminal.green "Total:")
           this_month_total
           (percentage this_month_records this_month_goal)
           (string_of_duration (Time.Span.abs this_month_goal_difference))
           (if this_month_goal_difference > Time.Span.zero then "ahead" else "behind")
+          (in_color ANSITerminal.green "Last month:")
           last_month_total
