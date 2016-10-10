@@ -10,8 +10,8 @@ let total_duration records =
 
 let string_of_duration span =
   let open Time.Span in
-  let hours = int_of_float (to_hr span) in
-  let minutes = (int_of_float (to_min span)) mod 60 in
+  let hours = to_hr span |> int_of_float in
+  let minutes = (to_min span |> int_of_float) mod 60 in
   sprintf "%dh %2dmin" hours minutes
 
 let string_of_record_timespan record =
@@ -31,7 +31,7 @@ let string_total records =
   string_of_duration (total_duration records)
 
 let percentage records goal =
-  int_of_float ((Time.Span.to_hr (total_duration records)) *. 100.0 /. (float goal))
+  int_of_float ((total_duration records |> Time.Span.to_hr) *. 100.0 /. (float goal))
 
 let summary records =
   let open TimDate in
@@ -48,7 +48,7 @@ let summary records =
     let total_not_zero day =
       (total_of_day day) <> Time.Span.zero in
     let string_of_day day =
-      sprintf "%s: %s" (Date.to_string day) (string_of_duration (total_of_day day)) in
+      sprintf "%s: %s" (Date.to_string day) (total_of_day day |> string_of_duration) in
     join_with_nl (List.map (List.filter ~f:total_not_zero this_month_days) ~f:string_of_day) in
   let today_total = string_total today_records in
   let this_week_total = string_total this_week_records in
