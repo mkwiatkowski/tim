@@ -37,7 +37,7 @@ let read_tim_file file_name =
 let daily_hours_goal = 6
 
 let summary records =
-  let open Datetime in
+  let open TimDate in
   let filter_by_start_date records predicate =
     List.filter records ~f:(fun r -> predicate r.start) in
   let today_records = filter_by_start_date records is_today in
@@ -65,7 +65,7 @@ let summary records =
   let last_month_total = string_total last_month_records in
   let percentage records goal =
     int_of_float ((Time.Span.to_hr (total_duration records)) *. 100.0 /. (float goal)) in
-  let this_month_goal = Datetime.this_month_work_days_number * daily_hours_goal in
+  let this_month_goal = TimDate.this_month_work_days_number * daily_hours_goal in
   let this_week_goal = 5 * daily_hours_goal in
   sprintf "Today:\n%s\nTotal: %s. This week: %s (%d%% goal).\n\nThis month:\n%s\nTotal: %s (%d%% goal). Last month: %s.\n"
           today_timespans
