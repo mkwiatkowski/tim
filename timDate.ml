@@ -41,6 +41,12 @@ let is_last_month time =
 let this_month_days =
   Date.dates_between ~min:(beginning_of_month today) ~max:today
 
-let this_month_work_days_number =
-  let days = Date.dates_between ~min:(beginning_of_month today) ~max:(end_of_month today) in
+let work_days_between d1 d2 =
+  let days = Date.dates_between ~min:d1 ~max:d2 in
   List.length (List.filter days ~f:Date.is_weekday)
+
+let this_month_work_days_number =
+  work_days_between (beginning_of_month today) (end_of_month today)
+
+let this_month_work_days_so_far =
+  work_days_between (beginning_of_month today) today

@@ -55,8 +55,11 @@ let summary records =
   let this_month_total = string_total this_month_records in
   let last_month_total = string_total last_month_records in
   let this_month_goal = TimDate.this_month_work_days_number * TimConfig.daily_hours_goal in
+  let open Time.Span in
+  let this_month_expected_so_far = float_of_int (TimDate.this_month_work_days_so_far * TimConfig.daily_hours_goal) |> of_hr in
+  let this_month_goal_difference = (total_duration this_month_records) - this_month_expected_so_far in
   let this_week_goal = 5 * TimConfig.daily_hours_goal in
-  sprintf "Today:\n%s\nTotal: %s. This week: %s (%d%% goal).\n\nThis month:\n%s\nTotal: %s (%d%% goal). Last month: %s.\n"
+  sprintf "Today:\n%s\nTotal: %s. This week: %s (%d%% goal).\n\nThis month:\n%s\nTotal: %s (%d%% goal, %s %s). Last month: %s.\n"
           today_timespans
           today_total
           this_week_total
@@ -64,4 +67,6 @@ let summary records =
           this_month_timespans
           this_month_total
           (percentage this_month_records this_month_goal)
+          (string_of_duration (Time.Span.abs this_month_goal_difference))
+          (if this_month_goal_difference > Time.Span.zero then "ahead" else "behind")
           last_month_total
