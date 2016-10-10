@@ -21,8 +21,6 @@ let string_of_record_timespan record =
   let open Time.Span in
   sprintf "%s - %s  [%s]" (format (start record)) (format (stop record)) (string_of_duration diff)
 
-let daily_hours_goal = 6
-
 let summary records =
   let open TimDate in
   let filter_by_start_date records predicate =
@@ -52,8 +50,8 @@ let summary records =
   let last_month_total = string_total last_month_records in
   let percentage records goal =
     int_of_float ((Time.Span.to_hr (total_duration records)) *. 100.0 /. (float goal)) in
-  let this_month_goal = TimDate.this_month_work_days_number * daily_hours_goal in
-  let this_week_goal = 5 * daily_hours_goal in
+  let this_month_goal = TimDate.this_month_work_days_number * TimConfig.daily_hours_goal in
+  let this_week_goal = 5 * TimConfig.daily_hours_goal in
   sprintf "Today:\n%s\nTotal: %s. This week: %s (%d%% goal).\n\nThis month:\n%s\nTotal: %s (%d%% goal). Last month: %s.\n"
           today_timespans
           today_total
@@ -65,5 +63,5 @@ let summary records =
           last_month_total
 
 let () =
-  let records = TimRecord.read_from_file "sample.json" in
+  let records = TimRecord.read_from_file TimConfig.tim_file_path in
   printf "%s" (summary records)
