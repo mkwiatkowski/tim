@@ -1,13 +1,7 @@
 open Core.Std
 
-type timRecord =
-  {
-    start : Time.t;
-    stop : Time.t;
-  }
-
 let time_span record =
-  Time.diff record.stop record.start
+  Time.diff (TimRecord.stop record) (TimRecord.start record)
 
 let total_duration records =
   let spans = List.map records ~f:time_span in
@@ -23,23 +17,16 @@ let string_of_duration span =
 let string_of_record_timespan record =
   let format t = Time.format t "%H:%M:%S" ~zone:Time.Zone.local in
   let diff = time_span record in
+  let open TimRecord in
   let open Time.Span in
-  sprintf "%s - %s  [%s]" (format record.start) (format record.stop) (string_of_duration diff)
-
-let read_tim_file file_name =
-  let open Yojson.Basic.Util in
-  let read_tim_record json =
-    let timestamp_of field = member field json |> to_int |> float |> Time.of_float in
-    {start = timestamp_of "start"; stop = timestamp_of "stop"} in
-  let json = Yojson.Basic.from_file file_name in
-  List.map (to_list json) ~f:read_tim_record
+  sprintf "%s - %s  [%s]" (format (start record)) (format (stop record)) (string_of_duration diff)
 
 let daily_hours_goal = 6
 
 let summary records =
   let open TimDate in
   let filter_by_start_date records predicate =
-    List.filter records ~f:(fun r -> predicate r.start) in
+    List.filter records ~f:(fun r -> predicate (TimRecord.start r)) in
   let today_records = filter_by_start_date records is_today in
   let this_week_records = filter_by_start_date records is_this_week in
   let this_month_records = filter_by_start_date records is_this_month in
@@ -78,5 +65,5 @@ let summary records =
           last_month_total
 
 let () =
-  let records = read_tim_file "sample.json" in
+  let records = TimRecord.read_from_file "sample.json" in
   printf "%s" (summary records)
