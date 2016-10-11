@@ -1,5 +1,6 @@
 open Core.Std
 
+val today : Date.t
 val to_date : Time.t -> Date.t
 val is_today : Time.t -> bool
 val is_this_week : Time.t -> bool

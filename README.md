@@ -2,8 +2,12 @@
 
 ## Dependencies
 
-opam install yojson ANSITerminal
+opam install yojson ANSITerminal kaputt
 
 ## Building
 
-corebuild -pkgs yojson,ANSITerminal -I src/ tim.native
+make build
+
+## Testing
+
+make test
