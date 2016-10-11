@@ -1,7 +1,10 @@
 open Core.Std
 
 let time_span record =
-  Time.diff (TimRecord.stop record) (TimRecord.start record)
+  let stop = match TimRecord.stop record with
+    | None -> Time.now ()
+    | Some t -> t in
+  Time.diff stop (TimRecord.start record)
 
 let total_duration records =
   let spans = List.map records ~f:time_span in
@@ -15,11 +18,13 @@ let string_of_duration span =
   sprintf "%dh %2dmin" hours minutes
 
 let string_of_record_timespan record =
-  let format t = Time.format t "%H:%M:%S" ~zone:Time.Zone.local in
+  let format = function
+    | None -> "..."
+    | Some t -> Time.format t "%H:%M:%S" ~zone:Time.Zone.local in
   let diff = time_span record in
   let open TimRecord in
   let open Time.Span in
-  sprintf "%s - %s  [%s]" (format (start record)) (format (stop record)) (string_of_duration diff)
+  sprintf "%s - %8s  [%s]" (format (Some (start record))) (format (stop record)) (string_of_duration diff)
 
 let filter_by_start_date records predicate =
   List.filter records ~f:(fun r -> predicate (TimRecord.start r))

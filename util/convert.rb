@@ -7,5 +7,4 @@ require 'json'
 
 puts JSON.load(File.open(ARGV.first, 'r')).
   flat_map {|_, day| day['intervals']}.
-  select {|record| record['start'] && record['stop']}.
   to_json
