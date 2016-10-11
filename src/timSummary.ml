@@ -36,7 +36,7 @@ let percentage records goal =
 let in_color color string =
   (ANSITerminal.sprintf [color] "%s" string)
 
-let summary records =
+let summary records daily_hours_goal =
   let open TimDate in
   let today_records = filter_by_start_date records is_today in
   let this_week_records = filter_by_start_date records is_this_week in
@@ -57,11 +57,11 @@ let summary records =
   let this_week_total = string_total this_week_records in
   let this_month_total = string_total this_month_records in
   let last_month_total = string_total last_month_records in
-  let this_month_goal = TimDate.this_month_work_days_number * TimConfig.daily_hours_goal in
+  let this_month_goal = TimDate.this_month_work_days_number * daily_hours_goal in
   let open Time.Span in
-  let this_month_expected_so_far = float_of_int (TimDate.this_month_work_days_so_far * TimConfig.daily_hours_goal) |> of_hr in
+  let this_month_expected_so_far = float_of_int (TimDate.this_month_work_days_so_far * daily_hours_goal) |> of_hr in
   let this_month_goal_difference = (total_duration this_month_records) - this_month_expected_so_far in
-  let this_week_goal = 5 * TimConfig.daily_hours_goal in
+  let this_week_goal = 5 * daily_hours_goal in
   sprintf "%s\n%s\n%s %s. %s %s (%d%% goal).\n\n%s\n%s\n%s %s (%d%% goal, %s %s). %s %s.\n"
           (in_color ANSITerminal.green "Today:")
           today_timespans
