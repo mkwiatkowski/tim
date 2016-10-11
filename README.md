@@ -6,4 +6,4 @@ opam install yojson ANSITerminal
 
 ## Building
 
-corebuild -pkgs yojson,ANSITerminal tim.native
+corebuild -pkgs yojson,ANSITerminal -I src/ tim.native
