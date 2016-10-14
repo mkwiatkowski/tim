@@ -6,8 +6,6 @@ type t =
     stop : Time.t option;
   }
 
-let start record = record.start
-let stop record = record.stop
 let make start stop =
   {start = start; stop = stop}
 

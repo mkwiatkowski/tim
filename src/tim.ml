@@ -1,38 +1,30 @@
 open Core.Std
 
-let perror message =
-  print_string message;
-  exit 1
-
-let is_timer_running = function
-  | [] ->
-     false
-  | hd :: _ ->
-     match TimRecord.stop hd with
-     | Some _ -> false
-     | None -> true
+let perror fmt = ksprintf (fun s -> print_string s; exit 1) fmt
 
 let report records goal =
   printf "%s" (TimSummary.summary records goal)
 
 let start records file =
-  if is_timer_running records then
-    let head :: _ = records in
-    printf "Timer already started at %s.\n" (TimDate.format_time (TimRecord.start head))
-  else
-    let now = Time.now () in
-    TimRecord.save_to_file ((TimRecord.make now None)::records) file;
-    printf "Timer started at %s.\n" (TimDate.format_time now)
+  let open TimRecord in
+  match records with
+  | [] | {start = _; stop = Some _} :: _ ->
+     let now = Time.now () in
+     TimRecord.save_to_file ((TimRecord.make now None)::records) file;
+     printf "Timer started at %s.\n" (TimDate.format_time now)
+  | {start = start; stop = None} :: _ ->
+     perror "Timer already started at %s.\n" (TimDate.format_time start)
 
 let stop records file =
-  if not (is_timer_running records) then
-    perror "Timer hasn't been started yet.\n"
-  else
-    let now = Time.now () in
-    let head :: rest = records in
-    let updated = TimRecord.make (TimRecord.start head) (Some (Time.now ())) in
-    TimRecord.save_to_file (updated::rest) file;
-    printf "Timer stopped at %s.\n" (TimDate.format_time now)
+  let open TimRecord in
+  match records with
+  | [] | {start = _; stop = Some _} :: _ ->
+     perror "Timer hasn't been started yet.\n"
+  | {start = start; stop = None} :: rest ->
+     let now = Time.now () in
+     let updated = TimRecord.make start (Some (Time.now ())) in
+     TimRecord.save_to_file (updated::rest) file;
+     printf "Timer stopped at %s.\n" (TimDate.format_time now)
 
 let command =
   Command.basic
