@@ -20,7 +20,7 @@ let string_of_duration span =
 let string_of_record_timespan record =
   let format = function
     | None -> "..."
-    | Some t -> Time.format t "%H:%M:%S" ~zone:Time.Zone.local in
+    | Some t -> TimDate.format_time t in
   let diff = time_span record in
   let open TimRecord in
   let open Time.Span in
@@ -48,8 +48,7 @@ let summary records daily_hours_goal =
   let this_month_records = filter_by_start_date records is_this_month in
   let last_month_records = filter_by_start_date records is_last_month in
   let today_timespans =
-    let records = filter_by_start_date records is_today in
-    join_with_nl (List.map records ~f:string_of_record_timespan) in
+    join_with_nl (List.sort ~cmp:compare (List.map today_records ~f:string_of_record_timespan)) in
   let this_month_timespans =
     let total_of_day day =
       total_duration (filter_by_start_date this_month_records (fun t -> day = (to_date t))) in

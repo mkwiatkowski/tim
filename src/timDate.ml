@@ -50,3 +50,6 @@ let this_month_work_days_number =
 
 let this_month_work_days_so_far =
   work_days_between (beginning_of_month today) today
+
+let format_time time =
+  Time.format time "%H:%M:%S" ~zone:Time.Zone.local
