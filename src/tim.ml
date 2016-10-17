@@ -1,7 +1,5 @@
 open Core.Std
 
-let perror fmt = ksprintf (fun s -> print_string s; exit 1) fmt
-
 let report records goal =
   printf "%s" (TimSummary.summary records goal)
 
@@ -13,13 +11,13 @@ let start records file =
      TimRecord.save_to_file ((TimRecord.make now None)::records) file;
      printf "Timer started at %s.\n" (TimDate.format_time now)
   | {start = start; stop = None} :: _ ->
-     perror "Timer already started at %s.\n" (TimDate.format_time start)
+     Printf.exitf "Timer already started at %s." (TimDate.format_time start) ()
 
 let stop records file =
   let open TimRecord in
   match records with
   | [] | {start = _; stop = Some _} :: _ ->
-     perror "Timer hasn't been started yet.\n"
+     Printf.exitf "Timer hasn't been started yet." ()
   | {start = start; stop = None} :: rest ->
      let now = Time.now () in
      let updated = TimRecord.make start (Some (Time.now ())) in
