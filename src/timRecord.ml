@@ -18,8 +18,10 @@ let read_from_file file_name =
       | Some timestamp -> Some (float timestamp |> Time.of_float) in
     let timestamp_of field = member field json |> to_int |> float |> Time.of_float in
     make (timestamp_of "start") (timestamp_option_of "stop") in
-  let json = Yojson.Basic.from_file file_name in
-  List.rev_map (to_list json) ~f:read_tim_record
+  try
+    let json = Yojson.Basic.from_file file_name in
+    List.rev_map (to_list json) ~f:read_tim_record with
+  | Sys_error _ -> []
 
 let save_to_file records file_name =
   let tmp_file_name = file_name ^ ".tmp" in
