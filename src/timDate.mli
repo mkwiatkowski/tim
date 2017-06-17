@@ -10,3 +10,4 @@ val this_month_days : Date.t list
 val this_month_work_days_number : int
 val this_month_work_days_so_far : int
 val format_time : Time.t -> string
+val time_of_string_after : Date.t -> string -> Time.t option

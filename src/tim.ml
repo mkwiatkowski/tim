@@ -1,45 +1,68 @@
 open Core.Std
 
-let report records goal =
+let report records _ goal =
   printf "%s" (TimSummary.summary records goal)
 
-let start records file =
+let start records file time =
   let open TimRecord in
   match records with
   | [] | {start = _; stop = Some _} :: _ ->
-     let now = Time.now () in
-     TimRecord.save_to_file ((TimRecord.make now None)::records) file;
-     printf "Timer started at %s.\n" (TimDate.format_time now)
+     TimRecord.save_to_file ((TimRecord.make time None)::records) file;
+     printf "Timer started at %s.\n" (TimDate.format_time time)
   | {start = start; stop = None} :: _ ->
      Printf.exitf "Timer already started at %s." (TimDate.format_time start) ()
 
-let stop records file =
+let stop records file time =
   let open TimRecord in
   match records with
   | [] | {start = _; stop = Some _} :: _ ->
      Printf.exitf "Timer hasn't been started yet." ()
   | {start = start; stop = None} :: rest ->
-     let now = Time.now () in
-     let updated = TimRecord.make start (Some (Time.now ())) in
+     let updated = TimRecord.make start (Some time) in
      TimRecord.save_to_file (updated::rest) file;
-     printf "Timer stopped at %s.\n" (TimDate.format_time now)
+     printf "Timer stopped at %s.\n" (TimDate.format_time time)
 
-let command =
+let time_arg =
+  Command.Spec.Arg_type.create
+    (fun str ->
+      match TimDate.time_of_string_after TimDate.today str with
+      | Some time -> time
+      | None -> Printf.exitf "Invalid time format." ()
+    )
+
+let time_spec =
+  Command.Spec.(
+    empty
+    +> anon (maybe_with_default (Time.now ()) ("time" %: time_arg))
+  )
+
+let command summary common_args func =
   Command.basic
-    ~summary:"Track work time"
+    ~summary:summary
     Command.Spec.(
       empty
-      +> anon (maybe_with_default "report" ("command" %: string))
       +> flag "-f" (required file) ~doc:"file Specify path to the storage file"
-      +> flag "-g" (required int) ~doc:"goal Daily hours goal (used to calculate completion percentage)"
+      ++ common_args
     )
-    (fun command file goal () ->
+    (fun file argval () ->
       let records = TimRecord.read_from_file file in
-      match command with
-      | "report" -> report records goal
-      | "start" -> start records file
-      | "stop" -> stop records file
-      | _ -> ()
+      func records file argval
     )
 
-let () = Command.run command
+let reportCommand =
+  command "Show report of worked time"
+          Command.Spec.(empty +> flag "-g" (required int) ~doc:"goal Daily hours goal (used to calculate completion percentage)")
+          report
+
+let startCommand =
+  command "Start tracking time" time_spec start
+
+let stopCommand =
+  command "Stop tracking time" time_spec stop
+
+let commandGroup =
+  Command.group
+    ~summary:"Track work time"
+    ["report", reportCommand ; "start", startCommand; "stop", stopCommand]
+
+let () = Command.run commandGroup

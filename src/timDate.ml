@@ -53,3 +53,16 @@ let this_month_work_days_so_far =
 
 let format_time time =
   Time.format time "%H:%M:%S" ~zone:Time.Zone.local
+
+(* Returns a time object that represents a point in time later than
+ * `reference` with the hour and minute components taken from `str`.
+ * Returns None if `str` doesn't contain a valid time. *)
+let time_of_string_after reference str =
+  let regexp = Str.regexp "\\([0-9]+\\):\\([0-9]+\\)" in
+  if Str.string_match regexp str 0 then
+    let hour = (int_of_string (Str.matched_group 1 str)) in
+    let minute = (int_of_string (Str.matched_group 2 str)) in
+    let ofday = Time.Ofday.create ~hr:hour ~min:minute () in
+    Some (Time.of_date_ofday reference ofday ~zone:Time.Zone.local)
+  else
+    None
