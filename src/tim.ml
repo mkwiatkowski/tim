@@ -36,12 +36,18 @@ let time_spec =
     +> anon (maybe_with_default (Time.now ()) ("time" %: time_arg))
   )
 
+let defaultJsonLocation =
+  let home = match Sys.getenv "HOME" with
+    | Some p -> p
+    | None -> "." in
+  Printf.sprintf "%s/.tim.json" home
+
 let command summary common_args func =
   Command.basic
     ~summary:summary
     Command.Spec.(
       empty
-      +> flag "-f" (required file) ~doc:"file Specify path to the storage file"
+      +> flag "-f" (optional_with_default defaultJsonLocation file) ~doc:"file Specify path to the storage file"
       ++ common_args
     )
     (fun file argval () ->
