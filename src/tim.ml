@@ -12,13 +12,21 @@ let report records _ goal =
 
 let start records file timeStrOpt =
   let open TimRecord in
+  let time =
+    parse_time_or_now (TimDate.time_of_string_before (Time.now ())) timeStrOpt in
+  let save () =
+    TimRecord.save_to_file ((TimRecord.make time None)::records) file;
+    printf "Timer started at %s.\n" (TimDate.format_time time) in
   match records with
   | {start = start; stop = None} :: _ ->
      Printf.exitf "Timer already started at %s." (TimDate.format_time start) ()
-  | [] | {start = _; stop = Some _} :: _ ->
-     let time = parse_time_or_now (TimDate.time_of_string_before (Time.now ())) timeStrOpt in
-     TimRecord.save_to_file ((TimRecord.make time None)::records) file;
-     printf "Timer started at %s.\n" (TimDate.format_time time)
+  | {start = _; stop = Some stop} :: _ ->
+     if time < stop then
+       Printf.exitf "Timer can't be started before the time it was last stopped at %s." (TimDate.format_time stop) ()
+     else
+       save ()
+  | [] ->
+     save ()
 
 let stop records file (timeStrOpt: string option) =
   let open TimRecord in
