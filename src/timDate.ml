@@ -1,4 +1,5 @@
 open Core.Std
+open Option.Monad_infix
 
 let today =
   Date.today ~zone:Time.Zone.local
@@ -54,15 +55,30 @@ let this_month_work_days_so_far =
 let format_time time =
   Time.format time "%H:%M:%S" ~zone:Time.Zone.local
 
-(* Returns a time object that represents a point in time later than
- * `reference` with the hour and minute components taken from `str`.
- * Returns None if `str` doesn't contain a valid time. *)
-let time_of_string_after reference str =
+let parse_oftime str =
   let regexp = Str.regexp "\\([0-9]+\\):\\([0-9]+\\)" in
   if Str.string_match regexp str 0 then
     let hour = (int_of_string (Str.matched_group 1 str)) in
     let minute = (int_of_string (Str.matched_group 2 str)) in
-    let ofday = Time.Ofday.create ~hr:hour ~min:minute () in
-    Some (Time.of_date_ofday reference ofday ~zone:Time.Zone.local)
+    Some (Time.Ofday.create ~hr:hour ~min:minute ())
   else
     None
+
+let time_of_string use_same_day direction reference str =
+  parse_oftime str >>= fun ofday ->
+  let base =
+    if use_same_day (Time.to_ofday reference ~zone:Time.Zone.local) ofday then
+      to_date reference
+    else
+      Date.add_days (to_date reference) direction in
+  Some (Time.of_date_ofday base ofday ~zone:Time.Zone.local)
+
+(* Returns a time object that represents a point in time later than
+ * `reference` with the hour and minute components taken from `str`.
+ * Returns None if `str` doesn't contain a valid time. *)
+let time_of_string_after = time_of_string (<) 1
+
+(* Returns a time object that represents a point in time earlier than
+ * `reference` with the hour and minute components taken from `str`.
+ * Returns None if `str` doesn't contain a valid time. *)
+let time_of_string_before = time_of_string (>=) (-1)

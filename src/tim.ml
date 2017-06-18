@@ -1,39 +1,40 @@
 open Core.Std
 
+let parse_time_or_now parse timeStrOpt =
+  match timeStrOpt with
+  | Some timeStr -> (match parse timeStr with
+                     | Some time -> time
+                     | None -> Printf.exitf "Invalid time format." ())
+  | None -> Time.now ()
+
 let report records _ goal =
   printf "%s" (TimSummary.summary records goal)
 
-let start records file time =
+let start records file timeStrOpt =
   let open TimRecord in
   match records with
-  | [] | {start = _; stop = Some _} :: _ ->
-     TimRecord.save_to_file ((TimRecord.make time None)::records) file;
-     printf "Timer started at %s.\n" (TimDate.format_time time)
   | {start = start; stop = None} :: _ ->
      Printf.exitf "Timer already started at %s." (TimDate.format_time start) ()
+  | [] | {start = _; stop = Some _} :: _ ->
+     let time = parse_time_or_now (TimDate.time_of_string_before (Time.now ())) timeStrOpt in
+     TimRecord.save_to_file ((TimRecord.make time None)::records) file;
+     printf "Timer started at %s.\n" (TimDate.format_time time)
 
-let stop records file time =
+let stop records file (timeStrOpt: string option) =
   let open TimRecord in
   match records with
   | [] | {start = _; stop = Some _} :: _ ->
      Printf.exitf "Timer hasn't been started yet." ()
   | {start = start; stop = None} :: rest ->
+     let time = parse_time_or_now (TimDate.time_of_string_after start) timeStrOpt in
      let updated = TimRecord.make start (Some time) in
      TimRecord.save_to_file (updated::rest) file;
      printf "Timer stopped at %s.\n" (TimDate.format_time time)
 
-let time_arg =
-  Command.Spec.Arg_type.create
-    (fun str ->
-      match TimDate.time_of_string_after TimDate.today str with
-      | Some time -> time
-      | None -> Printf.exitf "Invalid time format." ()
-    )
-
 let time_spec =
   Command.Spec.(
     empty
-    +> anon (maybe_with_default (Time.now ()) ("time" %: time_arg))
+    +> anon (maybe ("time" %: string))
   )
 
 let defaultJsonLocation =
@@ -42,13 +43,13 @@ let defaultJsonLocation =
     | None -> "." in
   Printf.sprintf "%s/.tim.json" home
 
-let command summary common_args func =
+let command summary additional_args func =
   Command.basic
     ~summary:summary
     Command.Spec.(
       empty
       +> flag "-f" (optional_with_default defaultJsonLocation file) ~doc:"file Specify path to the storage file"
-      ++ common_args
+      ++ additional_args
     )
     (fun file argval () ->
       let records = TimRecord.read_from_file file in
