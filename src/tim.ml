@@ -45,6 +45,11 @@ let time_spec =
     +> anon (maybe ("time" %: string))
   )
 
+let default_daily_goal =
+  match Sys.getenv "TIM_DAILY_GOAL" with
+  | Some s -> int_of_string s
+  | None -> 6
+
 let defaultJsonLocation =
   let home = match Sys.getenv "HOME" with
     | Some p -> p
@@ -54,6 +59,7 @@ let defaultJsonLocation =
 let command summary additional_args func =
   Command.basic
     ~summary:summary
+    ~readme:(fun () -> "Specify daily hours goal by setting TIM_DAILY_GOAL\n.It is used to calculate completion percentage.")
     Command.Spec.(
       empty
       +> flag "-f" (optional_with_default defaultJsonLocation file) ~doc:"file Specify path to the storage file"
@@ -66,7 +72,8 @@ let command summary additional_args func =
 
 let reportCommand =
   command "Show report of worked time"
-          Command.Spec.(empty +> flag "-g" (required int) ~doc:"goal Daily hours goal (used to calculate completion percentage)")
+          Command.Spec.(empty +> flag "-g" (optional_with_default default_daily_goal int)
+                                      ~doc:"Daily hours goal (used to calculate completion percentage)")
           report
 
 let startCommand =
