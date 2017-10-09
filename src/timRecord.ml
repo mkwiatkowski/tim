@@ -1,4 +1,4 @@
-open Core.Std
+open Core
 
 type t =
   {
@@ -16,9 +16,9 @@ let read_from_file file_name =
     let timestamp_option_of field =
       match member field json |> to_int_option with
       | None -> None
-      | Some timestamp -> Some (float timestamp |> Time.of_float) in
+      | Some timestamp -> Some (float timestamp |> TimDate.time_of_float) in
     let project = member "project" json |> to_string in
-    let timestamp_of field = member field json |> to_int |> float |> Time.of_float in
+    let timestamp_of field = member field json |> to_int |> float |> TimDate.time_of_float in
     make project (timestamp_of "start") (timestamp_option_of "stop") in
   try
     let json = Yojson.Basic.from_file file_name in
@@ -28,7 +28,7 @@ let read_from_file file_name =
 let save_to_file records file_name =
   let tmp_file_name = file_name ^ ".tmp" in
   let open Yojson.Basic in
-  let to_f t = `Int (int_of_float (Time.to_float t)) in
+  let to_f t = `Int (int_of_float (TimDate.time_to_float t)) in
   let write_tim_record record =
     let base = [("project", `String record.project); ("start", to_f record.start)] in
     match record.stop with

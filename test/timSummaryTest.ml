@@ -1,4 +1,4 @@
-open Core.Std
+open Core
 open Kaputt.Abbreviations
 
 let minutes_ago time n =
@@ -10,7 +10,7 @@ let now =
 let yesterday =
   Time.of_date_ofday (Date.add_days TimDate.today (-1))
                      Time.Ofday.start_of_day
-                     ~zone:Time.Zone.local
+                     ~zone:TimDate.local_tz
 
 let ten_minues_today =
   TimRecord.make "default" (minutes_ago now 10) (Some now)

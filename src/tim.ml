@@ -1,4 +1,4 @@
-open Core.Std
+open Core
 
 let parse_time_or_now parse timeStrOpt =
   match timeStrOpt with

@@ -1,11 +1,20 @@
-open Core.Std
+open Core
 open Option.Monad_infix
 
+let local_tz =
+  Lazy.force Time.Zone.local
+
+let time_of_float f =
+  Time.of_span_since_epoch (Time.Span.of_sec f)
+
+let time_to_float t =
+  Time.Span.to_sec (Time.to_span_since_epoch t)
+
 let today =
-  Date.today ~zone:Time.Zone.local
+  Date.today ~zone:local_tz
 
 let to_date time =
-  Time.to_date time ~zone:Time.Zone.local
+  Time.to_date time ~zone:local_tz
 
 let beginning_of_month d =
   Date.add_days d ~-((Date.day d) - 1)
@@ -53,7 +62,7 @@ let this_month_work_days_so_far =
   work_days_between (beginning_of_month today) today
 
 let format_time time =
-  Time.format time "%H:%M:%S" ~zone:Time.Zone.local
+  Time.format time "%H:%M:%S" ~zone:local_tz
 
 let parse_oftime str =
   let regexp = Str.regexp "\\([0-9]+\\):\\([0-9]+\\)" in
@@ -67,11 +76,11 @@ let parse_oftime str =
 let time_of_string use_same_day direction reference str =
   parse_oftime str >>= fun ofday ->
   let base =
-    if use_same_day (Time.to_ofday reference ~zone:Time.Zone.local) ofday then
+    if use_same_day (Time.to_ofday reference ~zone:local_tz) ofday then
       to_date reference
     else
       Date.add_days (to_date reference) direction in
-  Some (Time.of_date_ofday base ofday ~zone:Time.Zone.local)
+  Some (Time.of_date_ofday base ofday ~zone:local_tz)
 
 (* Returns a time object that represents a point in time later than
  * `reference` with the hour and minute components taken from `str`.

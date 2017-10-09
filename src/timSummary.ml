@@ -1,4 +1,4 @@
-open Core.Std
+open Core
 
 let in_color color string =
   (ANSITerminal.sprintf [color] "%s" string)
