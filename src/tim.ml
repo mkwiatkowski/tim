@@ -91,4 +91,10 @@ let commandGroup =
     ~summary:"Track work time"
     ["report", reportCommand ; "start", startCommand; "stop", stopCommand]
 
-let () = Command.run commandGroup
+let addDefaultCommandIfEmpty args =
+  if List.length args <= 1 then
+    args @ ["report"]
+  else
+    args
+
+let () = Command.run ~argv:(addDefaultCommandIfEmpty(Array.to_list Sys.argv)) commandGroup
