@@ -1,5 +1,8 @@
 open Core.Std
 
+let in_color color string =
+  (ANSITerminal.sprintf [color] "%s" string)
+
 let time_span record =
   let stop = match record.TimRecord.stop with
     | None -> Time.now ()
@@ -24,10 +27,17 @@ let string_of_record_timespan record =
   let diff = time_span record in
   let open TimRecord in
   let open Time.Span in
-  sprintf "%s - %8s  [%s]" (format (Some record.start)) (format record.stop) (string_of_duration diff)
+  sprintf "%s - %8s  [%s] (%s)"
+          (format (Some record.start))
+          (format record.stop)
+          (string_of_duration diff)
+          (in_color ANSITerminal.magenta (record.project))
 
 let filter_by_start_date records predicate =
   List.filter records ~f:(fun r -> predicate r.TimRecord.start)
+
+let filter_by_project records project =
+  List.filter records ~f:(fun r -> r.TimRecord.project = project)
 
 let join_with_nl strings =
   String.concat (List.map strings ~f:(fun s -> s ^ "\n"))
@@ -37,9 +47,6 @@ let string_total records =
 
 let percentage records goal =
   int_of_float ((total_duration records |> Time.Span.to_hr) *. 100.0 /. (float goal))
-
-let in_color color string =
-  (ANSITerminal.sprintf [color] "%s" string)
 
 let summary records daily_hours_goal =
   let open TimDate in
@@ -57,6 +64,14 @@ let summary records daily_hours_goal =
     let string_of_day day =
       sprintf "%s: %s" (in_color ANSITerminal.cyan (Date.to_string day)) (total_of_day day |> string_of_duration) in
     join_with_nl (List.map (List.filter ~f:total_not_zero this_month_days) ~f:string_of_day) in
+  let per_project_timespans =
+    let projects_this_month =
+      List.stable_dedup (List.sort ~cmp:compare (List.map this_month_records ~f:(fun r -> r.TimRecord.project))) in
+    let total_of_project p =
+      total_duration (filter_by_project this_month_records p) in
+    let string_of_project p =
+      sprintf "%s: %s" (in_color ANSITerminal.magenta p) (total_of_project p |> string_of_duration) in
+    join_with_nl (List.map projects_this_month ~f:string_of_project) in
   let today_total = string_total today_records in
   let this_week_total = string_total this_week_records in
   let this_month_total = string_total this_month_records in
@@ -66,7 +81,7 @@ let summary records daily_hours_goal =
   let this_month_expected_so_far = float_of_int (TimDate.this_month_work_days_so_far * daily_hours_goal) |> of_hr in
   let this_month_goal_difference = (total_duration this_month_records) - this_month_expected_so_far in
   let this_week_goal = 5 * daily_hours_goal in
-  sprintf "%s\n%s\n%s %s. %s %s (%d%% goal).\n\n%s\n%s\n%s %s (%d%% goal, %s %s). %s %s.\n"
+  sprintf "%s\n%s\n%s %s. %s %s (%d%% goal).\n\n%s\n%s\n%s\n%s\n%s %s (%d%% goal, %s %s). %s %s.\n"
           (in_color ANSITerminal.green "Today:")
           today_timespans
           (in_color ANSITerminal.green "Total:")
@@ -76,6 +91,8 @@ let summary records daily_hours_goal =
           (percentage this_week_records this_week_goal)
           (in_color ANSITerminal.green "This month:")
           this_month_timespans
+          (in_color ANSITerminal.green "Per project:")
+          per_project_timespans
           (in_color ANSITerminal.green "Total:")
           this_month_total
           (percentage this_month_records this_month_goal)

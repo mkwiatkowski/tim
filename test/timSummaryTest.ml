@@ -13,13 +13,13 @@ let yesterday =
                      ~zone:Time.Zone.local
 
 let ten_minues_today =
-  TimRecord.make (minutes_ago now 10) (Some now)
+  TimRecord.make "default" (minutes_ago now 10) (Some now)
 let five_minues_yesterday =
-  TimRecord.make (minutes_ago yesterday 5) (Some yesterday)
+  TimRecord.make "default" (minutes_ago yesterday 5) (Some yesterday)
 let two_hours_yesterday =
-  TimRecord.make (minutes_ago yesterday 120) (Some yesterday)
+  TimRecord.make "default" (minutes_ago yesterday 120) (Some yesterday)
 let twenty_minues_now =
-  TimRecord.make (minutes_ago now 20) None
+  TimRecord.make "default" (minutes_ago now 20) None
 
 let assert_matches regexp string =
   Assert.is_true ~msg:(sprintf "Expected %S to match %S" string regexp)

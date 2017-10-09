@@ -5,6 +5,10 @@
 
 require 'json'
 
+def add_default_project(record)
+  record.merge({'project' => 'default'})
+end
+
 puts JSON.load(File.open(ARGV.first, 'r')).
-  flat_map {|_, day| day['intervals']}.
+  flat_map {|_, day| day['intervals'].map{|r| add_default_project(r)}}.
   to_json
