@@ -7,6 +7,9 @@ let parse_time_or_now parse time_str_opt =
                      | None -> Printf.exitf "Invalid time format." ())
   | None -> Time.now ()
 
+let default_project =
+  "default"
+
 let report records _ _ goal =
   printf "%s" (TimSummary.summary records goal)
 
@@ -33,9 +36,10 @@ let stop records file project (time_str_opt: string option) =
   match records with
   | [] | {project = _; start = _; stop = Some _} :: _ ->
      Printf.exitf "Timer hasn't been started yet." ()
-  | {project = _; start = start; stop = None} :: rest ->
+  | {project = oldProject; start = start; stop = None} :: rest ->
      let time = parse_time_or_now (TimDate.time_of_string_after start) time_str_opt in
-     let updated = TimRecord.make project start (Some time) in
+     let newProject = if project = default_project then oldProject else project in
+     let updated = TimRecord.make newProject start (Some time) in
      TimRecord.save_to_file (updated::rest) file;
      printf "Timer stopped at %s.\n" (TimDate.format_time time)
 
@@ -49,9 +53,6 @@ let default_daily_goal =
   match Sys.getenv "TIM_DAILY_GOAL" with
   | Some s -> int_of_string s
   | None -> 6
-
-let default_project =
-  "default"
 
 let default_json_location =
   let home = match Sys.getenv "HOME" with
