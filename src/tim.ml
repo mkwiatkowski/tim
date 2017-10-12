@@ -1,8 +1,8 @@
 open Core
 
-let parse_time_or_now parse timeStrOpt =
-  match timeStrOpt with
-  | Some timeStr -> (match parse timeStr with
+let parse_time_or_now parse time_str_opt =
+  match time_str_opt with
+  | Some time_str -> (match parse time_str with
                      | Some time -> time
                      | None -> Printf.exitf "Invalid time format." ())
   | None -> Time.now ()
@@ -10,10 +10,10 @@ let parse_time_or_now parse timeStrOpt =
 let report records _ _ goal =
   printf "%s" (TimSummary.summary records goal)
 
-let start records file project timeStrOpt =
+let start records file project time_str_opt =
   let open TimRecord in
   let time =
-    parse_time_or_now (TimDate.time_of_string_before (Time.now ())) timeStrOpt in
+    parse_time_or_now (TimDate.time_of_string_before (Time.now ())) time_str_opt in
   let save () =
     TimRecord.save_to_file ((TimRecord.make project time None)::records) file;
     printf "Timer started at %s.\n" (TimDate.format_time time) in
@@ -28,13 +28,13 @@ let start records file project timeStrOpt =
   | [] ->
      save ()
 
-let stop records file project (timeStrOpt: string option) =
+let stop records file project (time_str_opt: string option) =
   let open TimRecord in
   match records with
   | [] | {project = _; start = _; stop = Some _} :: _ ->
      Printf.exitf "Timer hasn't been started yet." ()
   | {project = _; start = start; stop = None} :: rest ->
-     let time = parse_time_or_now (TimDate.time_of_string_after start) timeStrOpt in
+     let time = parse_time_or_now (TimDate.time_of_string_after start) time_str_opt in
      let updated = TimRecord.make project start (Some time) in
      TimRecord.save_to_file (updated::rest) file;
      printf "Timer stopped at %s.\n" (TimDate.format_time time)
@@ -53,7 +53,7 @@ let default_daily_goal =
 let default_project =
   "default"
 
-let defaultJsonLocation =
+let default_json_location =
   let home = match Sys.getenv "HOME" with
     | Some p -> p
     | None -> "." in
@@ -65,7 +65,7 @@ let command summary additional_args func =
     ~readme:(fun () -> "Specify daily hours goal by setting TIM_DAILY_GOAL\n.It is used to calculate completion percentage.")
     Command.Spec.(
       empty
-      +> flag "-f" (optional_with_default defaultJsonLocation file) ~doc:"file Specify path to the storage file"
+      +> flag "-f" (optional_with_default default_json_location file) ~doc:"file Specify path to the storage file"
       +> flag "-p" (optional_with_default default_project string) ~doc:"project Specify name of the project"
       ++ additional_args
     )
@@ -74,27 +74,27 @@ let command summary additional_args func =
       func records file project argval
     )
 
-let reportCommand =
+let report_command =
   command "Show report of worked time"
           Command.Spec.(empty +> flag "-g" (optional_with_default default_daily_goal int)
                                       ~doc:"Daily hours goal (used to calculate completion percentage)")
           report
 
-let startCommand =
+let start_command =
   command "Start tracking time" time_spec start
 
-let stopCommand =
+let stop_command =
   command "Stop tracking time" time_spec stop
 
-let commandGroup =
+let command_group =
   Command.group
     ~summary:"Track work time"
-    ["report", reportCommand ; "start", startCommand; "stop", stopCommand]
+    ["report", report_command ; "start", start_command; "stop", stop_command]
 
-let addDefaultCommandIfEmpty args =
+let add_default_command_if_empty args =
   if List.length args <= 1 then
     args @ ["report"]
   else
     args
 
-let () = Command.run ~argv:(addDefaultCommandIfEmpty(Array.to_list Sys.argv)) commandGroup
+let () = Command.run ~argv:(add_default_command_if_empty(Array.to_list Sys.argv)) command_group
