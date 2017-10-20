@@ -55,15 +55,27 @@ let default_daily_goal =
   | None -> 6
 
 let default_json_location =
-  let home = match Sys.getenv "HOME" with
-    | Some p -> p
-    | None -> "." in
-  Printf.sprintf "%s/.tim.json" home
+  match Sys.getenv "TIM_JSON_PATH" with
+  | Some path ->
+     path
+  | None ->
+     let home = match Sys.getenv "HOME" with
+       | Some p -> p
+       | None -> "." in
+     Printf.sprintf "%s/.tim.json" home
+
+let readme =
+  String.concat
+    ~sep:"\n"
+    [ "Specify daily hours goal by setting TIM_DAILY_GOAL."
+    ; "It is used to calculate completion percentage."
+    ; "Specify path to tim data file with TIM_JSON_PATH."
+    ]
 
 let command summary additional_args func =
   Command.basic
     ~summary:summary
-    ~readme:(fun () -> "Specify daily hours goal by setting TIM_DAILY_GOAL\n.It is used to calculate completion percentage.")
+    ~readme:(fun () -> readme)
     Command.Spec.(
       empty
       +> flag "-f" (optional_with_default default_json_location file) ~doc:"file Specify path to the storage file"
