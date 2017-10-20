@@ -90,7 +90,7 @@ let command summary additional_args func =
 let report_command =
   command "Show report of worked time"
           Command.Spec.(empty +> flag "-g" (optional_with_default default_daily_goal int)
-                                      ~doc:"Daily hours goal (used to calculate completion percentage)")
+                                      ~doc:"goal Daily hours goal (used to calculate completion percentage)")
           report
 
 let start_command =
