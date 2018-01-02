@@ -33,6 +33,9 @@ let end_of_month date =
 let same_year d1 d2 =
   Date.year d1 = Date.year d2
 
+let same_month d1 d2 =
+  Date.month d1 = Date.month d2
+
 let is_today time =
   to_date time = today
 
@@ -45,8 +48,9 @@ let is_this_month time =
   (same_year d today) && (Date.month d = Date.month today)
 
 let is_last_month time =
-  let d = to_date time in
-  (same_year d today) && (Date.month d = Date.month (Date.add_months today (-1)))
+  let d = to_date time
+  and last_month = Date.add_months today (-1) in
+  (same_year d last_month) && (same_month d last_month)
 
 let this_month_days =
   Date.dates_between ~min:(beginning_of_month today) ~max:today
