@@ -55,7 +55,7 @@ let summary records daily_hours_goal =
   let this_month_records = filter_by_start_date records is_this_month in
   let last_month_records = filter_by_start_date records is_last_month in
   let today_timespans =
-    join_with_nl (List.sort ~cmp:compare (List.map today_records ~f:string_of_record_timespan)) in
+    join_with_nl (List.sort ~compare:compare (List.map today_records ~f:string_of_record_timespan)) in
   let this_month_timespans =
     let total_of_day day =
       total_duration (filter_by_start_date this_month_records (fun t -> day = (to_date t))) in
@@ -66,7 +66,7 @@ let summary records daily_hours_goal =
     join_with_nl (List.map (List.filter ~f:total_not_zero this_month_days) ~f:string_of_day) in
   let per_project_timespans =
     let projects_this_month =
-      List.stable_dedup (List.sort ~cmp:compare (List.map this_month_records ~f:(fun r -> r.TimRecord.project))) in
+      List.stable_dedup (List.sort ~compare:compare (List.map this_month_records ~f:(fun r -> r.TimRecord.project))) in
     let total_of_project p =
       total_duration (filter_by_project this_month_records p) in
     let string_of_project p =

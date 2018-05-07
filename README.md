@@ -2,8 +2,8 @@
 
 ## Dependencies
 
-- OCaml (known to compile on version 4.04.2)
-- `opam install yojson ANSITerminal kaputt`
+- OCaml (known to compile on version 4.06.1)
+- `opam install core yojson ANSITerminal kaputt`
 
 ## Building
 

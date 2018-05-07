@@ -73,7 +73,7 @@ let readme =
     ]
 
 let command summary additional_args func =
-  Command.basic
+  Command.basic_spec
     ~summary:summary
     ~readme:(fun () -> readme)
     Command.Spec.(
