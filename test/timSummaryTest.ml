@@ -1,5 +1,5 @@
 open Core
-open Kaputt.Abbreviations
+open OUnit2
 
 let minutes_ago time n =
   Time.sub time (Time.Span.of_min (float_of_int n))
@@ -22,30 +22,32 @@ let twenty_minues_now =
   TimRecord.make "default" (minutes_ago now 20) None
 
 let assert_matches regexp string =
-  Assert.is_true ~msg:(sprintf "Expected %S to match %S" string regexp)
-                 (Str.string_match (Str.regexp regexp) string 0)
+  assert_bool (sprintf "Expected %S to match %S" string regexp)
+              (Str.string_match (Str.regexp regexp) string 0)
 
 let t1 =
-  Test.make_simple_test
-    ~title:"string_of_record_timespan"
-    (fun () ->
-      assert_matches "[0-9]+:[0-9]+:[0-9]+ - [0-9]+:[0-9]+:[0-9]+  \\[0h 10min\\]"
-                     (TimSummary.string_of_record_timespan ten_minues_today);
-      assert_matches "[0-9]+:[0-9]+:[0-9]+ - [0-9]+:[0-9]+:[0-9]+  \\[2h  0min\\]"
-                     (TimSummary.string_of_record_timespan two_hours_yesterday);
-      assert_matches "[0-9]+:[0-9]+:[0-9]+ -      \\.\\.\\.  \\[0h 20min\\]"
-                     (TimSummary.string_of_record_timespan twenty_minues_now);
-    )
+  "string_of_record_timespan">:::
+    (List.map
+       ~f:(fun (argument, expected_regexp) ->
+         test_case
+           (fun _ ->
+             assert_matches expected_regexp (TimSummary.string_of_record_timespan argument)))
+       [ten_minues_today, "[0-9]+:[0-9]+:[0-9]+ - [0-9]+:[0-9]+:[0-9]+  \\[0h 10min\\]";
+        two_hours_yesterday, "[0-9]+:[0-9]+:[0-9]+ - [0-9]+:[0-9]+:[0-9]+  \\[2h  0min\\]";
+        twenty_minues_now, "[0-9]+:[0-9]+:[0-9]+ -      \\.\\.\\.  \\[0h 20min\\]"])
 
 let t2 =
-  Test.make_simple_test
-    ~title:"string_total"
-    (fun () ->
-      Assert.equal_string "0h  0min" (TimSummary.string_total []);
-      Assert.equal_string "0h  5min" (TimSummary.string_total [five_minues_yesterday]);
-      Assert.equal_string "2h 10min" (TimSummary.string_total [ten_minues_today; two_hours_yesterday]);
-      Assert.equal_string "0h 25min" (TimSummary.string_total [five_minues_yesterday; twenty_minues_now]);
-    )
+  "string_total">:::
+    (List.map
+       ~f:(fun (argument, expected) ->
+         test_case (fun _ -> assert_equal expected (TimSummary.string_total argument)))
+       [[], "0h  0min";
+        [five_minues_yesterday], "0h  5min";
+        [ten_minues_today; two_hours_yesterday], "2h 10min";
+        [five_minues_yesterday; twenty_minues_now], "0h 25min"])
+
+let suite =
+  "TimSummary">:::[t1; t2]
 
 let () =
-  Test.run_tests [t1; t2]
+  run_test_tt_main suite

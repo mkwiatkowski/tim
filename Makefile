@@ -4,5 +4,5 @@ build:
 
 .PHONY: test
 test:
-	corebuild -pkgs yojson,ANSITerminal,kaputt,str -Is src/,test/ timSummaryTest.native && ./timSummaryTest.native
-	corebuild -pkgs yojson,ANSITerminal,kaputt,str -Is src/,test/ timDateTest.native && TZ=CET ./timDateTest.native
+	corebuild -pkgs yojson,ANSITerminal,oUnit,str -Is src/,test/ timSummaryTest.native && ./timSummaryTest.native
+	corebuild -pkgs yojson,ANSITerminal,oUnit,str -Is src/,test/ timDateTest.native && TZ=CET ./timDateTest.native
