@@ -2,7 +2,7 @@
 
 ## Dependencies
 
-- OCaml (known to compile on version 4.06.1)
+- OCaml (known to compile on version 4.08.0)
 - `opam install core yojson ANSITerminal ounit`
 
 ## Building

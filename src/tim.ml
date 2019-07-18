@@ -78,7 +78,7 @@ let command summary additional_args func =
     ~readme:(fun () -> readme)
     Command.Spec.(
       empty
-      +> flag "-f" (optional_with_default default_json_location file) ~doc:"file Specify path to the storage file"
+      +> flag "-f" (optional_with_default default_json_location string) ~doc:"file Specify path to the storage file"
       +> flag "-p" (optional_with_default default_project string) ~doc:"project Specify name of the project"
       ++ additional_args
     )
