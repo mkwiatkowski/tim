@@ -43,6 +43,19 @@ let stop records file project (time_str_opt: string option) =
      TimRecord.save_to_file (updated::rest) file;
      printf "Timer stopped at %s.\n" (TimDate.format_time time)
 
+let undo records file =
+  let open TimRecord in
+  match records with
+  | [] ->
+     Printf.exitf "Tim.json is empty, nothing to undo." ()
+  | {project = project; start = start; stop = Some stop} :: rest ->
+     let updated = TimRecord.make project start None in
+     TimRecord.save_to_file (updated::rest) file;
+     printf "Performed undo for stop command at %s for project %s.\n" (TimDate.format_time stop) project
+  | {project = project; start = start; stop = None} :: rest ->
+     TimRecord.save_to_file rest file;
+     printf "Performed undo for start command at %s for project %s.\n" (TimDate.format_time start) project
+
 let time_spec =
   Command.Spec.(
     empty
@@ -72,16 +85,17 @@ let readme =
     ; "Specify path to tim data file with TIM_JSON_PATH."
     ]
 
+let file_flag =
+  Command.Spec.(flag "-f" (optional_with_default default_json_location string) ~doc:"file Specify path to the storage file")
+
+let project_flag =
+  Command.Spec.(flag "-p" (optional_with_default default_project string) ~doc:"project Specify name of the project")
+
 let command summary additional_args func =
   Command.basic_spec
     ~summary:summary
     ~readme:(fun () -> readme)
-    Command.Spec.(
-      empty
-      +> flag "-f" (optional_with_default default_json_location string) ~doc:"file Specify path to the storage file"
-      +> flag "-p" (optional_with_default default_project string) ~doc:"project Specify name of the project"
-      ++ additional_args
-    )
+    Command.Spec.(empty +> file_flag +> project_flag ++ additional_args)
     (fun file project argval () ->
       let records = TimRecord.read_from_file file in
       func records file project argval
@@ -99,10 +113,20 @@ let start_command =
 let stop_command =
   command "Stop tracking time" time_spec stop
 
+let undo_command =
+  Command.basic_spec
+    ~summary:"Undo the last start/stop command"
+    ~readme:(fun () -> readme)
+    Command.Spec.(empty +> file_flag)
+    (fun file () ->
+      let records = TimRecord.read_from_file file in
+      undo records file
+    )
+
 let command_group =
   Command.group
     ~summary:"Track work time"
-    ["report", report_command ; "start", start_command; "stop", stop_command]
+    ["report", report_command ; "start", start_command; "stop", stop_command; "undo", undo_command]
 
 let add_default_command_if_empty args =
   if List.length args <= 1 then
